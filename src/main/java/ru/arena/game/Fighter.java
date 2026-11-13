@@ -10,7 +10,7 @@ public final class Fighter {
     public boolean bot;
 
     public float x, y, aim;
-    public float hp, ammo = 3f, atkCd, superCharge, dashCd;
+    public float hp, ammo = 3f, atkCd, superCharge, dashCd, regenIdle;
     public boolean alive = true;
     public float respawnT, spawnProt, slowT, stunT, revealT, stealthT, kbx, kby;
 
