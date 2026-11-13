@@ -1,6 +1,6 @@
 // Supabase Edge Function: arena-api
 // Deploy with: supabase functions deploy arena-api
-// Required secret: ARENA_SERVER_KEY (server-side only).
+// Required secret: ARENA_SERVER_KEY (server-side only; POST only).
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -25,9 +25,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "GET" && req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const expected = Deno.env.get("ARENA_SERVER_KEY");
-  if (!expected || req.headers.get("x-arena-server-key") !== expected) {
-    return json({ error: "unauthorized" }, 401);
+  // Only writes require the private server key. GET exposes only public profile statistics.
+  if (req.method === "POST") {
+    const expected = Deno.env.get("ARENA_SERVER_KEY");
+    if (!expected || req.headers.get("x-arena-server-key") !== expected) {
+      return json({ error: "unauthorized" }, 401);
+    }
   }
 
   const url = Deno.env.get("SUPABASE_URL");
@@ -56,7 +59,7 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_match_payload" }, 400);
   }
 
-  // Validate the entire payload before writing anything, avoiding partial match awards.
+  // Validate the entire payload before writing anything.
   const seenPlayers = new Set<string>();
   for (const p of body.players) {
     if (!p || !isUuid(p.player_uuid) || seenPlayers.has(p.player_uuid.toLowerCase()) ||
