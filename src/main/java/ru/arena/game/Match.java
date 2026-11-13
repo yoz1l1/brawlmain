@@ -90,6 +90,8 @@ public final class Match {
         if (f.bot) Bots.think(this, f);
 
         f.atkCd = Math.max(0, f.atkCd - DT);
+        f.regenIdle += DT;
+        if (f.regenIdle >= 3f && f.hp < d.hp) healFighter(f, 420f * DT);
         f.dashCd = Math.max(0, f.dashCd - DT);
         f.slowT = Math.max(0, f.slowT - DT);
         f.stunT = Math.max(0, f.stunT - DT);
@@ -143,7 +145,7 @@ public final class Match {
             if (m > bestScore) { bestScore = m; best = c; }
         }
         f.x = best[0]; f.y = best[1];
-        f.hp = f.def.hp; f.ammo = 3f; f.alive = true; f.spawnProt = 1.6f;
+        f.hp = f.def.hp; f.ammo = 3f; f.alive = true; f.spawnProt = 1.6f; f.regenIdle = 0f;
         f.slowT = f.stunT = f.stealthT = 0; f.kbx = f.kby = 0; f.atkCd = 0;
         f.aim = f.team == 0 ? 0f : (float) Math.PI;
         fx.add(new Fx(Fx.SPAWN, f.team, f.x, f.y, 0, 0));
@@ -159,6 +161,7 @@ public final class Match {
         if (!t.alive || t.invulnerable()) return;
         float real = Math.min(amount, t.hp);
         t.hp -= amount;
+        t.regenIdle = 0f;
         if (src != null) {
             src.dmgDealt += real;
             src.superCharge = Math.min(1f, src.superCharge + real / src.def.supNeed);
@@ -214,6 +217,7 @@ public final class Match {
     private void attack(Fighter f) {
         BrawlerDef d = f.def;
         f.ammo -= 1f;
+        f.regenIdle = 0f;
         f.atkCd = d.atkCd;
         f.revealT = Math.max(f.revealT, 1.0f);
         float ang = f.aim;
