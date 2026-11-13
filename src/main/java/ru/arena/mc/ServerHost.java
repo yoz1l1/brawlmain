@@ -1,5 +1,6 @@
 package ru.arena.mc;
 
+import java.util.List;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -54,5 +55,10 @@ public final class ServerHost implements Host {
     public void setProtected(UUID id, boolean on) {
         ServerPlayerEntity p = player(id);
         if (p != null) p.setInvulnerable(on);
+    }
+
+    @Override
+    public void recordMatch(UUID matchId, List<Host.MatchResult> results) {
+        CloudProfiles.recordMatch(matchId, results);
     }
 }
