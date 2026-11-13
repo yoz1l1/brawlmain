@@ -1,0 +1,6 @@
+project_id = "feyxldpkwomajbykwysz"
+
+[functions.arena-api]
+# The function authenticates with its own server-only x-arena-server-key header.
+# Do not rely on Supabase user JWTs for server-to-server match reporting.
+verify_jwt = false
