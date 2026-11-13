@@ -90,7 +90,9 @@ public final class Match {
         if (f.bot) Bots.think(this, f);
 
         f.atkCd = Math.max(0, f.atkCd - DT);
-        f.regenIdle += DT;
+        // Попытка атаковать тоже прерывает восстановление, даже если патроны ещё перезаряжаются.
+        if (f.attackHeld) f.regenIdle = 0f;
+        else f.regenIdle += DT;
         if (f.regenIdle >= 3f && f.hp < d.hp) healFighter(f, 420f * DT);
         f.dashCd = Math.max(0, f.dashCd - DT);
         f.slowT = Math.max(0, f.slowT - DT);
