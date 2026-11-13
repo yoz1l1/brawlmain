@@ -60,9 +60,20 @@ public final class ClientState {
 
     public void onLobby(byte[] data) {
         lobby = Proto.Lobby.read(data);
-        if (lobby.inRoom && !lobby.inMatch && lobby.roomId != syncedRoom) {
-            syncedRoom = lobby.roomId;
-            if (net != null) net.action(Proto.A_SELECT, selected, "");
+        if (lobby.inRoom && !lobby.inMatch) {
+            int myIndex = -1;
+            if (net != null) {
+                String me = net.myName();
+                for (int i = 0; i < lobby.names.size(); i++) {
+                    if (lobby.names.get(i).equalsIgnoreCase(me)) { myIndex = i; break; }
+                }
+            }
+            boolean entered = lobby.roomId != syncedRoom;
+            if (entered) syncedRoom = lobby.roomId;
+            boolean serverDiffers = myIndex >= 0 && myIndex < lobby.brawlers.size()
+                    && lobby.brawlers.get(myIndex) != selected;
+            // Повторно подтверждаем выбор при входе и при устаревшем снимке лобби.
+            if (net != null && (entered || serverDiffers)) net.action(Proto.A_SELECT, selected, "");
         }
         if (!lobby.inRoom) syncedRoom = -1;
     }
