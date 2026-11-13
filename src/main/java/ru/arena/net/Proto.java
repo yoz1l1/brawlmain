@@ -15,7 +15,7 @@ public final class Proto {
 
     // клиент -> сервер: действия в лобби
     public static final int A_CREATE = 0, A_JOIN = 1, A_LEAVE = 2, A_SELECT = 3, A_INVITE = 4,
-            A_START = 5, A_PRACTICE = 6, A_MAP = 7, A_BOTS = 8, A_SYNC = 9;
+            A_START = 5, A_PRACTICE = 6, A_MAP = 7, A_BOTS = 8, A_SYNC = 9, A_TEAM = 10;
 
     public static final int IN_ATTACK = 1, IN_SUPER = 2, IN_DASH = 4;
 
@@ -28,6 +28,7 @@ public final class Proto {
         public String host = "";
         public final List<String> names = new ArrayList<>();
         public final List<Integer> brawlers = new ArrayList<>();
+        public final List<Integer> teams = new ArrayList<>();
 
         public byte[] write() {
             try {
@@ -41,7 +42,7 @@ public final class Proto {
                     o.writeByte(map);
                     o.writeUTF(host);
                     o.writeByte(names.size());
-                    for (int i = 0; i < names.size(); i++) { o.writeUTF(names.get(i)); o.writeByte(brawlers.get(i)); }
+                    for (int i = 0; i < names.size(); i++) { o.writeUTF(names.get(i)); o.writeByte(brawlers.get(i)); o.writeByte(i < teams.size() ? teams.get(i) : (i % 2)); }
                 }
                 return bo.toByteArray();
             } catch (IOException e) { throw new UncheckedIOException(e); }
@@ -59,7 +60,7 @@ public final class Proto {
                     l.map = i.readUnsignedByte();
                     l.host = i.readUTF();
                     int n = i.readUnsignedByte();
-                    for (int k = 0; k < n; k++) { l.names.add(i.readUTF()); l.brawlers.add(i.readUnsignedByte()); }
+                    for (int k = 0; k < n; k++) { l.names.add(i.readUTF()); l.brawlers.add(i.readUnsignedByte()); l.teams.add(i.readUnsignedByte() & 1); }
                 }
                 return l;
             } catch (IOException e) { throw new UncheckedIOException(e); }
