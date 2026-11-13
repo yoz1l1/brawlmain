@@ -303,6 +303,9 @@ public final class MenuView extends BaseView {
             D.rect(g, x, yy, x + 112, yy + 11, D.alpha(0xFFFFFFFF, i % 2 == 0 ? 0.08f : 0.03f));
             BrawlerArt.icon(g, l.brawlers.get(i), x + 6, yy + 5, 0.32f);
             g.text((isHost ? "* " : "") + l.names.get(i), x + 14, yy + 2, isHost ? GOLD : 0xFFFFFFFF, false);
+            int team = i < l.teams.size() ? l.teams.get(i) : (i % 2);
+            D.panel(g, x + 76, yy + 1, x + 91, yy + 10, team == 0 ? BLUE : RED);
+            D.scaled(g, "T" + (team + 1), x + 79, yy + 2, 0.7f, 0xFFFFFFFF, true);
             String bn = Brawlers.get(l.brawlers.get(i)).name;
             g.text(bn, x + 112 - g.textWidth(bn) - 2, yy + 2, 0xFF9FB0F0, false);
             yy += 12;
@@ -315,7 +318,11 @@ public final class MenuView extends BaseView {
         String mn = GameMap.NAMES[Math.max(0, Math.min(GameMap.COUNT - 1, l.map))];
         D.scaled(g, mn, x + 49 + (50 - g.textWidth(mn) * 0.8f) / 2f, yy + 3, 0.8f, 0xFFFFFFFF, true);
         yy += 15;
-        button(g, l.bots ? "Боты: вкл" : "Боты: выкл", x, yy, 112, 13, l.bots ? GREEN : 0xFF59607A, host && !l.inMatch, () -> st.net.action(Proto.A_BOTS, 0, ""));
+        button(g, l.bots ? "Боты +" : "Боты -", x, yy, 52, 13, l.bots ? GREEN : 0xFF59607A, host && !l.inMatch, () -> st.net.action(Proto.A_BOTS, 0, ""));
+        int myIndex = -1;
+        for (int i = 0; i < l.names.size(); i++) if (l.names.get(i).equalsIgnoreCase(st.net.myName())) { myIndex = i; break; }
+        int myTeam = myIndex >= 0 && myIndex < l.teams.size() ? l.teams.get(myIndex) : 0;
+        button(g, "Команда " + (myTeam + 1), x + 56, yy, 56, 13, myTeam == 0 ? BLUE : RED, !l.inMatch, () -> st.net.action(Proto.A_TEAM, 0, ""));
         yy += 17;
         field(g, nickField, x, yy, 112, 14, "ник друга");
         yy += 16;
