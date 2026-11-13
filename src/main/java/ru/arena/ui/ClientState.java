@@ -32,6 +32,27 @@ public final class ClientState {
     public MatchClient match;
     public int selected = 0;
     public final List<String> friends = new ArrayList<>();
+
+    // Облачный профиль: только чтение публичной статистики.
+    public String cloudPlayerUuid = "";
+    public String cloudStatus = "не загружен";
+    public int cloudTrophies;
+    public int cloudWins;
+    public int cloudLosses;
+    public int cloudDraws;
+
+    public void setCloudProfile(String uuid, int trophies, int wins, int losses, int draws) {
+        cloudPlayerUuid = uuid;
+        cloudTrophies = trophies;
+        cloudWins = wins;
+        cloudLosses = losses;
+        cloudDraws = draws;
+        cloudStatus = "загружен";
+    }
+
+    public void setCloudStatus(String uuid, String status) {
+        if (uuid == null || uuid.equals(cloudPlayerUuid)) cloudStatus = status;
+    }
     private int syncedRoom = -1;
     private boolean friendsLoaded;
 
