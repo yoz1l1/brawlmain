@@ -81,6 +81,10 @@ public final class MenuView extends BaseView {
         D.rect(g, -offX - 2, -offY - 2, vw, 28, 0xDD0B0F2A);
         D.rect(g, -offX - 2, 28, vw, 29, 0xFF3B4690);
         D.big(g, "БОЕВАЯ АРЕНА", 74, 8, 1.55f, GOLD, 0xFF14102A);
+        String cloudLabel = "☁ " + (st.cloudStatus.equals("загружен")
+                ? st.cloudTrophies + " троф. / " + st.cloudWins + " побед"
+                : st.cloudStatus.equals("загрузка") ? "загрузка..." : "профиль: " + st.cloudStatus);
+        g.text(cloudLabel, 8, 11, st.cloudStatus.equals("загружен") ? GOLD : 0xFF9FB0F0, false);
         Proto.Lobby l = st.lobby;
         g.text("ID:", 250, 11, 0xFFD6E4FF, false);
         field(g, idField, 266, 6, 52, 16, "0000");
