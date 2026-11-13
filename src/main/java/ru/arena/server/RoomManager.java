@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import ru.arena.game.BrawlerDef;
+import ru.arena.game.Brawlers;
 import ru.arena.game.Fighter;
 import ru.arena.game.GameMap;
 import ru.arena.game.Match;
@@ -23,6 +25,7 @@ public final class RoomManager {
         public int id;
         public UUID host;
         public final LinkedHashMap<UUID, Integer> brawler = new LinkedHashMap<>();
+        public final LinkedHashMap<UUID, Integer> teams = new LinkedHashMap<>();
         public int map;
         public boolean bots = true;
         public Match match;
@@ -60,6 +63,7 @@ public final class RoomManager {
                 break;
             }
             case Proto.A_SYNC: sendLobby(p); break;
+            case Proto.A_TEAM: switchTeam(p); break;
             default: break;
         }
     }
@@ -68,7 +72,8 @@ public final class RoomManager {
         Room r = new Room();
         do { r.id = 1000 + rnd.nextInt(9000); } while (rooms.containsKey(r.id));
         r.host = p;
-        r.brawler.put(p, rnd.nextInt(8));
+        r.brawler.put(p, 0);
+        r.teams.put(p, 0);
         r.map = rnd.nextInt(GameMap.COUNT);
         rooms.put(r.id, r);
         byPlayer.put(p, r);
@@ -84,7 +89,12 @@ public final class RoomManager {
         if (r.match != null) { host.sendToast(p, "В этой комнате уже идёт матч"); return; }
         if (r.brawler.size() >= MAX_PLAYERS) { host.sendToast(p, "Комната заполнена"); return; }
         leave(p, false);
-        r.brawler.put(p, rnd.nextInt(8));
+        int[] counts = teamCounts(r);
+        int team = counts[0] <= counts[1] ? 0 : 1;
+        if (counts[team] >= 3) team = 1 - team;
+        if (counts[team] >= 3) { host.sendToast(p, "Обе команды заполнены"); return; }
+        r.brawler.put(p, 0);
+        r.teams.put(p, team);
         byPlayer.put(p, r);
         broadcastLobby(r);
         for (UUID u : r.brawler.keySet()) if (!u.equals(p)) host.sendToast(u, host.nameOf(p) + " зашёл в комнату");
@@ -94,6 +104,7 @@ public final class RoomManager {
         Room r = byPlayer.remove(p);
         if (r == null) { if (notify) sendLobby(p); return; }
         r.brawler.remove(p);
+        r.teams.remove(p);
         Integer id = r.fid.remove(p);
         if (r.match != null) {
             host.setProtected(p, false);
@@ -117,7 +128,26 @@ public final class RoomManager {
     private void select(UUID p, int b) {
         Room r = byPlayer.get(p);
         if (r == null || r.match != null) return;
-        r.brawler.put(p, ((b % 8) + 8) % 8);
+        int count = Brawlers.ALL.length;
+        r.brawler.put(p, ((b % count) + count) % count);
+        broadcastLobby(r);
+    }
+
+    private int[] teamCounts(Room r) {
+        int[] counts = {0, 0};
+        for (Integer team : r.teams.values()) if (team != null && team >= 0 && team <= 1) counts[team]++;
+        return counts;
+    }
+
+    private void switchTeam(UUID p) {
+        Room r = byPlayer.get(p);
+        if (r == null || r.match != null) return;
+        Integer current = r.teams.get(p);
+        if (current == null) return;
+        int other = 1 - current;
+        int[] counts = teamCounts(r);
+        if (counts[other] >= 3) { host.sendToast(p, "В другой команде уже 3 игрока"); return; }
+        r.teams.put(p, other);
         broadcastLobby(r);
     }
 
@@ -145,7 +175,8 @@ public final class RoomManager {
         Room r = byPlayer.get(p);
         if (r == null || r.match != null) return;
         if (!r.host.equals(p)) { host.sendToast(p, "Начать бой может только хозяин комнаты"); return; }
-        if (!r.bots && r.brawler.size() < 2) { host.sendToast(p, "Без ботов нужно минимум 2 игрока"); return; }
+        int[] counts = teamCounts(r);
+        if (!r.bots && (counts[0] == 0 || counts[1] == 0)) { host.sendToast(p, "Для боя без ботов нужны игроки в обеих командах"); return; }
         startMatch(r);
     }
 
@@ -155,7 +186,7 @@ public final class RoomManager {
         int[] teamCount = {0, 0};
         for (int i = 0; i < humans.size(); i++) {
             UUID u = humans.get(i);
-            int team = i % 2;
+            int team = r.teams.getOrDefault(u, i % 2);
             teamCount[team]++;
             slots.add(new Match.Slot(host.nameOf(u), team, r.brawler.get(u), false));
         }
@@ -243,7 +274,7 @@ public final class RoomManager {
         Proto.Lobby l = new Proto.Lobby();
         l.inRoom = true; l.roomId = r.id; l.map = r.map; l.bots = r.bots; l.inMatch = r.match != null;
         l.host = host.nameOf(r.host);
-        for (Map.Entry<UUID, Integer> e : r.brawler.entrySet()) { l.names.add(host.nameOf(e.getKey())); l.brawlers.add(e.getValue()); }
+        for (Map.Entry<UUID, Integer> e : r.brawler.entrySet()) { l.names.add(host.nameOf(e.getKey())); l.brawlers.add(e.getValue()); l.teams.add(r.teams.getOrDefault(e.getKey(), 0)); }
         return l;
     }
 
