@@ -259,6 +259,25 @@ public final class RoomManager {
     }
 
     private void finishMatch(Room r) {
+        Match finished = r.match;
+        List<Host.MatchResult> results = new ArrayList<>();
+        boolean hasBots = finished.fighters.stream().anyMatch(f -> f.bot);
+
+        // Матчи с ботами не награждаются: это предотвращает простую накрутку трофеев.
+        if (!hasBots && finished.winner >= 0) {
+            UUID matchId = UUID.randomUUID();
+            for (Map.Entry<UUID, Integer> entry : r.fid.entrySet()) {
+                UUID playerUuid = entry.getKey();
+                Fighter fighter = finished.fighters.get(entry.getValue());
+                String outcome = finished.winner == 2 ? "draw"
+                        : (fighter.team == finished.winner ? "win" : "loss");
+                results.add(new Host.MatchResult(
+                        playerUuid, host.nameOf(playerUuid), fighter.def.id, outcome,
+                        fighter.kills, fighter.deaths, Math.max(0, Math.round(fighter.dmgDealt))));
+            }
+            if (!results.isEmpty()) host.recordMatch(matchId, results);
+        }
+
         for (UUID u : r.fid.keySet()) {
             host.setProtected(u, false);
             host.sendEnd(u);
