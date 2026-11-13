@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "arenamod",
+  "version": "${version}",
+  "name": "Боевая Арена",
+  "description": "Аркадные командные бои 3 на 3 прямо в меню Minecraft: свои бойцы, карты с кустами, способности с эффектами и игра с друзьями по нику или ID комнаты.",
+  "authors": ["Автор мода"],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["ru.arena.mc.ArenaMod"],
+    "client": ["ru.arena.mc.ArenaClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.4",
+    "java": ">=17",
+    "fabric-api": "*"
+  }
+}
