@@ -29,7 +29,8 @@ public final class ArenaClient implements ClientModInitializer {
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            String uuid = client.getSession().getUuidOrNull().map(java.util.UUID::toString).orElse(null);
+            java.util.UUID accountUuid = client.getSession().getUuidOrNull();
+            String uuid = accountUuid == null ? null : accountUuid.toString();
             CloudProfileClient.load(uuid);
         });
 
